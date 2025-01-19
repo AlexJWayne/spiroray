@@ -4,9 +4,6 @@ import "core:fmt"
 import "core:math"
 import rl "vendor:raylib"
 
-// r1: i32 = 80
-// r2: i32 = 57
-// r3: i32 = 50
 
 Params :: struct {
 	r1:   i32,
@@ -49,6 +46,8 @@ init :: proc() {
 	params.hash = get_params_hash()
 
 	init_camera()
+
+	rl.GuiLoadStyle("./style_dark.rgs")
 }
 
 init_camera :: proc() {
