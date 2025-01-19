@@ -5,12 +5,6 @@ import "core:math"
 import rl "vendor:raylib"
 
 
-Params :: struct {
-	r1:   i32,
-	r2:   i32,
-	r3:   i32,
-	hash: i32,
-}
 params: Params
 editing_index: i8 = -1
 
@@ -28,6 +22,7 @@ main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1024, 1024, "SpiroRay")
 	defer rl.CloseWindow()
+	rl.GuiLoadStyle("./style_dark.rgs")
 
 	init()
 
@@ -38,16 +33,8 @@ main :: proc() {
 }
 
 init :: proc() {
-	params = Params {
-		r1 = 96,
-		r2 = 57,
-		r3 = 50,
-	}
-	params.hash = get_params_hash()
-
+	params = params_init()
 	init_camera()
-
-	rl.GuiLoadStyle("./style_dark.rgs")
 }
 
 init_camera :: proc() {
@@ -64,11 +51,9 @@ init_camera :: proc() {
 
 
 update :: proc() {
-	new_params_hash := get_params_hash()
-	if params.hash != new_params_hash {
+	if params_update(&params) {
 		init_camera()
 		points_cursor = 0
-		params.hash = new_params_hash
 	}
 
 	angle -= SPEED * math.PI * 2 * rl.GetFrameTime()
@@ -80,7 +65,6 @@ render :: proc() {
 	rl.ClearBackground(rl.BLACK)
 	defer rl.EndDrawing()
 
-
 	rl.BeginMode2D(camera)
 	{
 		rl.DrawCircleLines(0, 0, auto_cast params.r1, rl.GRAY)
@@ -91,14 +75,11 @@ render :: proc() {
 	}
 	rl.EndMode2D()
 
-	render_slider(1, "R1 ", &params.r1, 0, 100)
-	render_slider(2, "R2 ", &params.r2, 0, 100)
-	render_slider(3, "R3 ", &params.r3, 0, 100)
+	render_input(1, "R1 ", &params.r1, 0, 100)
+	render_input(2, "R2 ", &params.r2, 0, 100)
+	render_input(3, "R3 ", &params.r3, 0, 100)
 }
 
-get_params_hash :: proc() -> i32 {
-	return params.r1 * 1_000_000 + params.r2 * 1_000 + params.r3
-}
 
 render_gear :: proc() {
 	r1 := params.r1
@@ -130,7 +111,7 @@ render_gear :: proc() {
 	rl.DrawCircleV(point, 1, rl.WHITE)
 }
 
-render_slider :: proc(y: u8, label: cstring, value: ^i32, min: i32, max: i32) {
+render_input :: proc(y: u8, label: cstring, value: ^i32, min: i32, max: i32) {
 	clicked := rl.GuiSpinner(
 		rl.Rectangle{50, 30 * auto_cast y, 100, 20},
 		label,
