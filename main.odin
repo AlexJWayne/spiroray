@@ -34,27 +34,16 @@ main :: proc() {
 
 init :: proc() {
 	params = params_init()
-	init_camera()
-}
-
-init_camera :: proc() {
-	camera = rl.Camera2D {
-		offset   = rl.Vector2 {
-			auto_cast rl.GetScreenWidth() / 2,
-			auto_cast rl.GetScreenHeight() / 2,
-		},
-		target   = rl.Vector2{0, 0},
-		rotation = 0,
-		zoom     = auto_cast rl.GetScreenWidth() / auto_cast params.r1 * 0.4,
-	}
+	camera = camera_init(&params)
 }
 
 
 update :: proc() {
 	if params_update(&params) {
-		init_camera()
+		camera = camera_init(&params)
 		points_cursor = 0
 	}
+	camera_update(&camera, &params)
 
 	angle -= SPEED * math.PI * 2 * rl.GetFrameTime()
 }
@@ -69,7 +58,7 @@ render :: proc() {
 	{
 		rl.DrawCircleLines(0, 0, auto_cast params.r1, rl.GRAY)
 
-		render_gear()
+		render_gear(&params)
 
 		rl.DrawLineStrip(&points[0], points_cursor, rl.VIOLET)
 	}
@@ -80,36 +69,6 @@ render :: proc() {
 	render_input(3, "R3 ", &params.r3, 0, 100)
 }
 
-
-render_gear :: proc() {
-	r1 := params.r1
-	r2 := params.r2
-	r3 := params.r3
-
-	center := rl.Vector2Rotate(rl.Vector2{0, auto_cast (r1 - r2)}, angle)
-	rl.DrawCircleLinesV(center, auto_cast r2, rl.GRAY)
-
-	gear_angle := angle * (1 - (cast(f32)r1 / cast(f32)r2))
-
-	rl.DrawLineV(
-		center - rl.Vector2Rotate(rl.Vector2{auto_cast r2 * 0.2, 0}, gear_angle),
-		center + rl.Vector2Rotate(rl.Vector2{auto_cast r2 * 0.2, 0}, gear_angle),
-		rl.DARKGRAY,
-	)
-
-	rl.DrawLineV(
-		center - rl.Vector2Rotate(rl.Vector2{auto_cast r2 * 0.2, 0}, gear_angle + math.PI / 2),
-		center + rl.Vector2Rotate(rl.Vector2{auto_cast r2 * 0.2, 0}, gear_angle + math.PI / 2),
-		rl.DARKGRAY,
-	)
-
-	point := center + rl.Vector2Rotate(rl.Vector2{auto_cast r3, 0}, gear_angle)
-	points[points_cursor] = point
-	points_cursor += 1
-	if points_cursor >= POINT_COUNT {points_cursor = 0}
-
-	rl.DrawCircleV(point, 1, rl.WHITE)
-}
 
 render_input :: proc(y: u8, label: cstring, value: ^i32, min: i32, max: i32) {
 	clicked := rl.GuiSpinner(

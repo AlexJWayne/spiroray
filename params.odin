@@ -29,6 +29,7 @@ params_update :: proc(params: ^Params) -> bool {
 	return false
 }
 
+@(private = "file")
 get_params_hash :: proc(params: ^Params) -> i32 {
 	return params.r1 * 1_000_000 + params.r2 * 1_000 + params.r3
 }
