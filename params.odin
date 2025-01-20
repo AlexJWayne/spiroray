@@ -13,13 +13,13 @@ params_init :: proc() -> Params {
 		r2 = 57,
 		r3 = 50,
 	}
-	params.hash = get_params_hash(&params)
+	params.hash = get_hash(&params)
 	return params
 }
 
 // Returns true when the params have changed since the last frame.
 params_update :: proc(params: ^Params) -> bool {
-	new_params_hash := get_params_hash(params)
+	new_params_hash := get_hash(params)
 
 	if params.hash != new_params_hash {
 		params.hash = new_params_hash
@@ -30,6 +30,6 @@ params_update :: proc(params: ^Params) -> bool {
 }
 
 @(private = "file")
-get_params_hash :: proc(params: ^Params) -> i32 {
+get_hash :: proc(params: ^Params) -> i32 {
 	return params.r1 * 1_000_000 + params.r2 * 1_000 + params.r3
 }

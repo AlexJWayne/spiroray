@@ -4,19 +4,24 @@ import "core:fmt"
 import "core:math"
 import rl "vendor:raylib"
 
-
-params: Params
-editing_index: i8 = -1
-
-SPEED :: 0.5
-
-POINT_COUNT :: 20_000
-
+@(private = "file")
 camera: rl.Camera2D
 
+@(private = "file")
+params: Params
+
+@(private = "file")
+gear: Gear
+
+@(private = "file")
 angle: f32 = 0
-points: [POINT_COUNT]rl.Vector2
-points_cursor: i32 = 0
+
+@(private = "file")
+editing_index: i8 = -1
+
+@(private = "file")
+SPEED :: 0.5
+
 
 main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
@@ -33,19 +38,17 @@ main :: proc() {
 }
 
 init :: proc() {
+	camera = camera_init()
 	params = params_init()
-	camera = camera_init(&params)
+	gear = gear_init()
 }
 
-
 update :: proc() {
-	if params_update(&params) {
-		camera = camera_init(&params)
-		points_cursor = 0
-	}
+	if params_update(&params) {gear.traced_point_index = 0}
 	camera_update(&camera, &params)
 
 	angle -= SPEED * math.PI * 2 * rl.GetFrameTime()
+	gear_update(&gear, &params, angle)
 }
 
 
@@ -55,13 +58,7 @@ render :: proc() {
 	defer rl.EndDrawing()
 
 	rl.BeginMode2D(camera)
-	{
-		rl.DrawCircleLines(0, 0, auto_cast params.r1, rl.GRAY)
-
-		render_gear(&params)
-
-		rl.DrawLineStrip(&points[0], points_cursor, rl.VIOLET)
-	}
+	gear_render(&gear, &params)
 	rl.EndMode2D()
 
 	render_input(1, "R1 ", &params.r1, 0, 100)
