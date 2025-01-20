@@ -27,7 +27,7 @@ main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1024, 1024, "SpiroRay")
 	defer rl.CloseWindow()
-	rl.GuiLoadStyle("./style_dark.rgs")
+	rl.GuiLoadStyle("./style_dark.rgs") // TODO embed for wasm target
 
 	init()
 
@@ -44,11 +44,9 @@ init :: proc() {
 }
 
 update :: proc() {
-	if params_update(&params) {gear.traced_point_index = 0}
+	if params_update(&params) {gear = gear_init()}
 	camera_update(&camera, &params)
-
-	angle -= SPEED * math.PI * 2 * rl.GetFrameTime()
-	gear_update(&gear, &params, angle)
+	gear_update(&gear, &params)
 }
 
 

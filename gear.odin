@@ -6,24 +6,57 @@ import rl "vendor:raylib"
 @(private = "file")
 POINT_COUNT :: 20_000
 
+@(private = "file")
+SPEED :: 0.5
+
+@(private = "file")
+UPS :: 120
+
 Gear :: struct {
+	moving:             bool,
 	center:             rl.Vector2,
+	outer_angle:        f32,
 	angle:              f32,
+	started_at:         f32,
 	traced_points:      [POINT_COUNT]rl.Vector2,
 	traced_point_index: u16,
 }
 
 gear_init :: proc() -> Gear {
-	return Gear{traced_point_index = 0}
+	return Gear {
+		moving = true,
+		outer_angle = 0,
+		angle = 0,
+		started_at = auto_cast rl.GetTime(),
+		traced_point_index = 0,
+	}
 }
 
-gear_update :: proc(gear: ^Gear, params: ^Params, angle: f32) {
-	gear.center = get_center(params, angle)
-	gear.angle = get_inner_gear_angle(params, angle)
+gear_update :: proc(gear: ^Gear, params: ^Params) {
+
+	elapsed: f32 = auto_cast rl.GetTime()
+	total_ticks := cast(u16)((elapsed - gear.started_at) * UPS)
+
+	for i in gear.traced_point_index ..= total_ticks {
+		gear_tick(gear, params, elapsed)
+	}
+}
+
+gear_tick :: proc(gear: ^Gear, params: ^Params, elapsed: f32) {
+	if !gear.moving {return}
+
+
+	gear.outer_angle -= SPEED * math.PI * 2 / UPS
+
+	gear.center = get_center(params, gear.outer_angle)
+	gear.angle = get_inner_gear_angle(params, gear.outer_angle)
 
 	gear.traced_points[gear.traced_point_index] = get_traced_point(gear, params)
 	gear.traced_point_index += 1
-	if gear.traced_point_index >= POINT_COUNT {gear.traced_point_index = 0}
+
+	if gear.traced_point_index >= POINT_COUNT {
+		gear.moving = false
+	}
 }
 
 gear_render :: proc(gear: ^Gear, params: ^Params) {
@@ -31,9 +64,12 @@ gear_render :: proc(gear: ^Gear, params: ^Params) {
 	r2 := cast(f32)params.r2
 
 	render_perimeter(rl.Vector2{0, 0}, r1)
-	render_perimeter(gear.center, r2)
-	render_center_line(gear.center, r2, gear.angle)
-	render_center_line(gear.center, r2, gear.angle + math.PI / 2)
+
+	if gear.moving {
+		render_perimeter(gear.center, r2)
+		render_center_line(gear.center, r2, gear.angle)
+		render_center_line(gear.center, r2, gear.angle + math.PI / 2)
+	}
 
 	render_traced_path(gear)
 
