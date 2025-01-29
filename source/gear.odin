@@ -4,7 +4,7 @@ import "core:math"
 import rl "vendor:raylib"
 
 @(private = "file")
-POINT_COUNT :: 2000 // 20000 and web app will not init
+POINT_COUNT :: 20000
 
 @(private = "file")
 SPEED :: 0.5
