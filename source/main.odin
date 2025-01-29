@@ -1,8 +1,11 @@
 package main
 
-import "core:fmt"
-import "core:math"
+// import "core:fmt"
+// import "core:math"
+import "core:c"
 import rl "vendor:raylib"
+
+run: bool
 
 @(private = "file")
 camera: rl.Camera2D
@@ -23,21 +26,13 @@ editing_index: i8 = -1
 SPEED :: 0.5
 
 
-main :: proc() {
+init :: proc() {
+	run = true
+
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1024, 1024, "SpiroRay")
-	defer rl.CloseWindow()
-	rl.GuiLoadStyle("./style_dark.rgs") // TODO embed for wasm target
+	// rl.GuiLoadStyle("assets/style_dark.rgs")
 
-	init()
-
-	for !rl.WindowShouldClose() {
-		update()
-		render()
-	}
-}
-
-init :: proc() {
 	camera = camera_init()
 	params = params_init()
 	gear = gear_init()
@@ -47,6 +42,9 @@ update :: proc() {
 	if params_update(&params) {gear = gear_init()}
 	camera_update(&camera, &params)
 	gear_update(&gear, &params)
+
+
+	render()
 }
 
 
@@ -75,4 +73,21 @@ render_input :: proc(y: u8, label: cstring, value: ^i32, min: i32, max: i32) {
 		y == auto_cast editing_index,
 	)
 	if clicked > 0 {editing_index = auto_cast y}
+}
+
+parent_window_size_changed :: proc(w, h: int) {
+	rl.SetWindowSize(c.int(w), c.int(h))
+}
+
+should_run :: proc() -> bool {
+	when ODIN_OS != .JS {
+		// Never run this proc in browser. It contains a 16 ms sleep on web!
+		if rl.WindowShouldClose() {run = false}
+	}
+
+	return run
+}
+
+shutdown :: proc() {
+	rl.CloseWindow()
 }

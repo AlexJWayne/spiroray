@@ -4,7 +4,7 @@ import "core:math"
 import rl "vendor:raylib"
 
 @(private = "file")
-POINT_COUNT :: 20_000
+POINT_COUNT :: 200
 
 @(private = "file")
 SPEED :: 0.5
@@ -37,7 +37,7 @@ gear_update :: proc(gear: ^Gear, params: ^Params) {
 	elapsed: f32 = auto_cast rl.GetTime()
 	total_ticks := cast(u16)((elapsed - gear.started_at) * UPS)
 
-	for i in gear.traced_point_index ..= total_ticks {
+	for _ in gear.traced_point_index ..= total_ticks {
 		gear_tick(gear, params, elapsed)
 	}
 }
